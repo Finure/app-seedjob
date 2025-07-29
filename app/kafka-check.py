@@ -6,9 +6,11 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC")
 KAFKA_SECRET_PATH = "/etc/kafka/secrets"
 KAFKA_CA_PATH = "/etc/kafka/ca"
 
+
 def read_secret(path):
     with open(path, "r") as f:
         return f.read().strip()
+
 
 KAFKA_KEY_PASSWORD = read_secret(
     os.path.join(KAFKA_SECRET_PATH, "user.password")
@@ -26,6 +28,7 @@ admin_conf = {
     "ssl.key.password": KAFKA_KEY_PASSWORD,
 }
 
+
 def topic_exists(admin_client, topic_name):
     try:
         metadata = admin_client.list_topics(timeout=10)
@@ -33,6 +36,7 @@ def topic_exists(admin_client, topic_name):
     except Exception as e:
         print(f"Error checking topic: {e}")
         return False
+
 
 def main():
     if not KAFKA_BOOTSTRAP_SERVERS or not KAFKA_TOPIC:
@@ -47,6 +51,7 @@ def main():
     else:
         print(f"Topic '{KAFKA_TOPIC}' does not exist")
         exit(1)
+
 
 if __name__ == "__main__":
     main()
