@@ -87,7 +87,7 @@ rename_map = {
 }
 df = df.rename(columns=rename_map)
 
-required = ["id", "age", "income", "employed", "credit_score", "loan_amount", "approved"]
+required = ["age", "income", "employed", "credit_score", "loan_amount", "approved"]
 missing = [c for c in required if c not in df.columns]
 if missing:
     raise ValueError(f"CSV missing required columns: {missing}")
