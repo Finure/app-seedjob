@@ -58,20 +58,38 @@ def delivery_report(err, msg):
 
 
 print("Downloading Kaggle dataset")
-path = kagglehub.dataset_download("rikdifos/credit-card-approval-prediction")
+path = kagglehub.dataset_download("dotskilled/bank-credit-card-approval")
 
 csv_file = next(
     (
         os.path.join(path, f)
         for f in os.listdir(path)
-        if f.lower() == "application_record.csv"
+        if f.lower() == "credit_approval_data.csv"
     ),
     None,
 )
 if not csv_file:
-    raise FileNotFoundError("application_record.csv not found")
+    raise FileNotFoundError("credit_approval_data.csv not found")
 
 df = pd.read_csv(csv_file)
+
+
+df.columns = [c.strip() for c in df.columns]
+rename_map = {
+    "ID": "id",
+    "Age": "age",
+    "Income": "income",
+    "Employed": "employed",
+    "CreditScore": "credit_score",
+    "LoanAmount": "loan_amount",
+    "Approved": "approved",
+}
+df = df.rename(columns=rename_map)
+
+required = ["id", "age", "income", "employed", "credit_score", "loan_amount", "approved"]
+missing = [c for c in required if c not in df.columns]
+if missing:
+    raise ValueError(f"CSV missing required columns: {missing}")
 
 
 def send_batch(batch_rows):
@@ -79,28 +97,13 @@ def send_batch(batch_rows):
     for row in batch_rows:
         try:
             data = {
-                "id": int(row["ID"]),
-                "code_gender": row["CODE_GENDER"],
-                "flag_own_car": row["FLAG_OWN_CAR"],
-                "flag_own_realty": row["FLAG_OWN_REALTY"],
-                "cnt_children": int(row["CNT_CHILDREN"]),
-                "amt_income_total": float(row["AMT_INCOME_TOTAL"]),
-                "name_income_type": row["NAME_INCOME_TYPE"],
-                "name_education_type": row["NAME_EDUCATION_TYPE"],
-                "name_family_status": row["NAME_FAMILY_STATUS"],
-                "name_housing_type": row["NAME_HOUSING_TYPE"],
-                "days_birth": int(row["DAYS_BIRTH"]),
-                "days_employed": int(row["DAYS_EMPLOYED"]),
-                "flag_mobil": int(row["FLAG_MOBIL"]),
-                "flag_work_phone": int(row["FLAG_WORK_PHONE"]),
-                "flag_phone": int(row["FLAG_PHONE"]),
-                "flag_email": int(row["FLAG_EMAIL"]),
-                "occupation_type": (
-                    row["OCCUPATION_TYPE"]
-                    if pd.notnull(row["OCCUPATION_TYPE"])
-                    else None
-                ),
-                "cnt_fam_members": float(row["CNT_FAM_MEMBERS"]),
+                "id": int(row["id"]),
+                "age": int(row["age"]),
+                "income": int(row["income"]),
+                "employed": int(row["employed"]),
+                "credit_score": int(row["credit_score"]),
+                "loan_amount": int(row["loan_amount"]),
+                "approved": int(row["approved"]),
             }
 
             producer.produce(
@@ -111,7 +114,7 @@ def send_batch(batch_rows):
             )
             success += 1
         except Exception as e:
-            print(f"Failed to send record {row['ID']}: {e}")
+            print(f"Failed to send record {row['id']}: {e}")
             fail += 1
 
     producer.poll(0)
