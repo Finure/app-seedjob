@@ -4,7 +4,7 @@
 
 image:
   repository: ghcr.io/finure/app-seedjob
-  tag: 1.0.2
+  tag: 1.1.2
   pullPolicy: IfNotPresent
 producer:
   command:
