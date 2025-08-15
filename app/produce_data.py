@@ -6,6 +6,7 @@ import kagglehub
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from confluent_kafka import Producer
+import uuid
 
 load_dotenv()
 
@@ -86,7 +87,7 @@ rename_map = {
 }
 df = df.rename(columns=rename_map)
 
-required = ["id", "age", "income", "employed", "credit_score", "loan_amount", "approved"]
+required = ["age", "income", "employed", "credit_score", "loan_amount", "approved"]
 missing = [c for c in required if c not in df.columns]
 if missing:
     raise ValueError(f"CSV missing required columns: {missing}")
@@ -97,7 +98,7 @@ def send_batch(batch_rows):
     for row in batch_rows:
         try:
             data = {
-                "id": int(row["id"]),
+                "id": str(uuid.uuid4()),
                 "age": int(row["age"]),
                 "income": int(row["income"]),
                 "employed": int(row["employed"]),
