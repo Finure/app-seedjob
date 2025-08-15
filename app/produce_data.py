@@ -6,7 +6,7 @@ import kagglehub
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from confluent_kafka import Producer
-import hashlib
+import uuid
 
 load_dotenv()
 
@@ -74,19 +74,6 @@ if not csv_file:
 
 df = pd.read_csv(csv_file)
 
-# add id
-if "ID" not in df.columns and "id" not in df.columns:
-    needed = ["Age", "Income", "Employed", "CreditScore", "LoanAmount", "Approved"]
-    missing_src = [c for c in needed if c not in df.columns]
-    if missing_src:
-        raise ValueError(f"CSV missing required source columns: {missing_src}")
-
-    def make_id(row):
-        s = f"{int(row['Age'])}|{int(row['Income'])}|{int(row['Employed'])}|{int(row['CreditScore'])}|{int(row['LoanAmount'])}|{int(row['Approved'])}"
-        return int(hashlib.sha1(s.encode("utf-8")).hexdigest()[:16], 16)
-
-    df["ID"] = df.apply(make_id, axis=1)
-
 
 df.columns = [c.strip() for c in df.columns]
 rename_map = {
@@ -111,7 +98,7 @@ def send_batch(batch_rows):
     for row in batch_rows:
         try:
             data = {
-                "id": int(row["id"]),
+                "id": str(uuid.uuid4()),
                 "age": int(row["age"]),
                 "income": int(row["income"]),
                 "employed": int(row["employed"]),
